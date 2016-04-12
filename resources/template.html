@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <title>Jasmine test w/ Webdriver</title>
+        <script type="text/javascript">
+            (function init() {
+                var logs = [];
+                var oldLog = console.log,
+                    oldWarn = console.warn,
+                    oldError = console.error;
+                console.log = function() {
+                    logs.push({
+                        type: "log",
+                        args: Array.prototype.slice.call(arguments)
+                    });
+                    oldLog.apply(console, arguments);
+                };
+                console.warn = function() {
+                    logs.push({
+                        type: "warning",
+                        args: Array.prototype.slice.call(arguments)
+                    });
+                    oldWarn.apply(console, arguments);
+                };
+                console.error = function() {
+                    logs.push({
+                        type: "error",
+                        args: Array.prototype.slice.call(arguments)
+                    });
+                    oldError.apply(console, arguments);
+                };
+
+                window.onerror = function(msg, url, line, col, error) {
+                    logs.push({
+                        type: "exception",
+                        args: [msg, url + " (" + line + "," + col + ")", error]
+                    })
+                };
+
+                window.fetchLogs = function() {
+                    if (logs.length > 0) {
+                        var fetchedLogs = [].concat(logs);
+                        logs = [];
+                        return fetchedLogs;
+                    }
+                    return [];
+                };
+                window.testPassed = 0;
+                window.testFailed = 0;
+                window.testSkipped = 0;
+                window.testCompleted = false;
+                window.getStats = function() {
+                    return {
+                        passed: window.testPassed,
+                        failed: window.testFailed,
+                        skipped: window.testSkipped
+                    };
+                };
+            })();
+        </script>
+        <!-- JASMINE_SETUP -->
+    </head>
+    <body>
+        <!-- Jasdriver -->
+        <script type="text/javascript">
+            jasmine.getEnv().addReporter({
+                specStarted: function(result) {
+                    console.log("Running:", result.description + "...");
+                },
+                specDone: function(result) {
+                    console.log("Completed:", result.description, "(" + result.status + ")");
+                    switch (result.status) {
+                        case "passed":
+                            window.testPassed += 1;
+                            break;
+                        case "failed":
+                            window.testFailed += 1;
+                            break;
+                        case "pending":
+                            /* falls-through */
+                        default:
+                            window.testSkipped += 1;
+                    }
+                }
+            });
+            afterAll(function() {
+                window.testCompleted = true;
+            });
+        </script>
+        <!-- JASMINE_SPECS -->
+    </body>
+</html>
