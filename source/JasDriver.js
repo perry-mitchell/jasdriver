@@ -3,6 +3,14 @@
 const log = require("./log.js");
 const table = require("table").default;
 
+function formatStack(stackText) {
+    return stackText.replace(/^[^\n]*?Error[^\n]*/, "");
+}
+
+function isError(obj) {
+    return obj && obj.message && obj.name.toLowerCase().indexOf("error") >= 0;
+}
+
 class JasDriver {
 
     constructor(webdriverInstance, config) {
@@ -91,8 +99,17 @@ class JasDriver {
             })
             .then(function(logs) {
                 logs.forEach(function(logData) {
-                    //renderLog(log.type, log.args);
-                    log(logData.type, logData.args);
+                    if (logData.type === "error") {
+                        if (logData.args.length === 1 && isError(logData.args[0])) {
+                            let containedError = logData.args[0],
+                                stack = containedError.stack || formatStack(logData.stack);
+                            log(logData.type, [containedError.message, stack]);
+                        } else {
+                            log(logData.type, logData.args);
+                        }
+                    } else {
+                        log(logData.type, logData.args);
+                    }
                 })
             })
             .then(() => {
