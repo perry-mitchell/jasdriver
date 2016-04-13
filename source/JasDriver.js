@@ -57,7 +57,7 @@ class JasDriver {
     watchLogs() {
         this.logWatch = setInterval(() => {
             this.driver.executeScript(function() {
-                return window.fetchLogs();
+                return window.fetchLogs ? window.fetchLogs() : [];
             })
             .then(function(logs) {
                 logs.forEach(function(log) {
