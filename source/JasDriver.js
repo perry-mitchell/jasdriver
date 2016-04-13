@@ -1,8 +1,7 @@
 "use strict";
 
-function renderLog(type, args) {
-    console.log.apply(console, [`[${type.toUpperCase()}]`].concat(args));
-}
+const log = require("./log.js");
+const table = require("table").default;
 
 class JasDriver {
 
@@ -27,7 +26,7 @@ class JasDriver {
             }
         })
         .catch(function(err) {
-            console.error(err);
+            log("error", err);
         })
     }
 
@@ -35,10 +34,24 @@ class JasDriver {
         let exitDelay = 0;
         console.log("\n");
         console.log("Tests finished");
-        console.log("  Passed: ", stats.passed);
-        console.log("  Failed: ", stats.failed);
-        console.log("  Skipped: ", stats.skipped);
-        console.log("\n");
+        console.log(table(
+            [
+                ["Passed", stats.passed],
+                ["Failed", stats.failed],
+                ["Skipped", stats.skipped]
+            ],
+            {
+                columns: {
+                    0: {
+                        width: 9
+                    },
+                    1: {
+                        width: 6,
+                        alignment: "right"
+                    }
+                }
+            }
+        ));
         if (this.config.closeDriverOnFinish) {
             this.driver.quit();
             exitDelay = 500;
@@ -60,15 +73,16 @@ class JasDriver {
                 return window.fetchLogs ? window.fetchLogs() : [];
             })
             .then(function(logs) {
-                logs.forEach(function(log) {
-                    renderLog(log.type, log.args);
+                logs.forEach(function(logData) {
+                    //renderLog(log.type, log.args);
+                    log(logData.type, logData.args);
                 })
             })
             .then(() => {
                 return this.checkStatus();
             })
             .catch(function(err) {
-                console.error("Logging error:", err);
+                log("error", err);
             })
         }, 500);
     }
