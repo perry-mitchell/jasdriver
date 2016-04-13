@@ -8,6 +8,8 @@ class JasDriver {
     constructor(webdriverInstance, config) {
         this.driver = webdriverInstance;
         this.config = config;
+        this.complete = false;
+        this._completionCallbacks = [];
     }
 
     checkStatus() {
@@ -32,6 +34,7 @@ class JasDriver {
 
     finish(stats) {
         let exitDelay = 0;
+        this.complete = true;
         console.log("\n");
         console.log("Tests finished");
         console.log(table(
@@ -56,15 +59,29 @@ class JasDriver {
             this.driver.quit();
             exitDelay = 500;
         }
-        if (stats.failed > 0 && this.config.exitOnFinish) {
-            setTimeout(function() {
-                process.exit(1);
-            }, exitDelay);
+        if (this.config.exitOnFinish) {
+            if (stats.failed > 0) {
+                setTimeout(function() {
+                    process.exit(1);
+                }, exitDelay);
+            }
+        } else {
+            this._completionCallbacks.forEach(function(cb) {
+                (cb)();
+            });
         }
     }
 
     initialise(url) {
         this.driver.get(url);
+    }
+
+    waitForCompletion() {
+        return (this.complete) ?
+            Promise.resolve() :
+            new Promise((resolve) => {
+                this._completionCallbacks.push(resolve);
+            });
     }
 
     watchLogs() {

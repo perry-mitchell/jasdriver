@@ -31,5 +31,4 @@ if (!Array.isArray(configs)) {
     configs = [configs];
 }
 
-// temp:
-jasdriver(configs[0]);
+jasdriver(configs);
