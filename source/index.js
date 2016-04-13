@@ -20,6 +20,7 @@ function filePathToElement(path, elType) {
 
 module.exports = function jasDriver(config, webdriver) {
     config = Object.assign({
+        closeDriverOnFinish: true,
         exitOnFinish: true,
         runnerDir: BUILD_DIR,
         runnerFilename: "_SpecRunner.html",

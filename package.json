@@ -13,6 +13,9 @@
     "type": "git",
     "url": "git+https://github.com/perry-mitchell/jasdriver.git"
   },
+  "bin": {
+    "jasdriver": "./source/cli.js"
+  },
   "author": "",
   "license": "MIT",
   "bugs": {

@@ -32,13 +32,21 @@ class JasDriver {
     }
 
     finish(stats) {
+        let exitDelay = 0;
         console.log("\n");
         console.log("Tests finished");
         console.log("  Passed: ", stats.passed);
         console.log("  Failed: ", stats.failed);
         console.log("  Skipped: ", stats.skipped);
+        console.log("\n");
+        if (this.config.closeDriverOnFinish) {
+            this.driver.quit();
+            exitDelay = 500;
+        }
         if (stats.failed > 0 && this.config.exitOnFinish) {
-            process.exit(1);
+            setTimeout(function() {
+                process.exit(1);
+            }, exitDelay);
         }
     }
 
