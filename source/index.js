@@ -18,16 +18,19 @@ function filePathToElement(path, elType) {
     throw new Error("Unrecognised element type: "+ elType);
 }
 
-module.exports = function jasDriver(config, webdriver) {
+function jasDriver(config) {
     config = Object.assign({
+        closeDriverOnFinish: true,
         exitOnFinish: true,
         runnerDir: BUILD_DIR,
         runnerFilename: "_SpecRunner.html",
         specs: [],
         specFilter: function() { return true; },
+        webdriver: null,
         webdriverBrowser: "chrome"
     }, config);
     // webdriver setup
+    let webdriver = config.webdriver;
     if (!webdriver) {
         let Webdriver = require("selenium-webdriver");
         webdriver = (new Webdriver.Builder())
@@ -68,4 +71,18 @@ module.exports = function jasDriver(config, webdriver) {
     let jd = new JasDriver(webdriver, config);
     jd.initialise(`file://${runnerPath}`);
     jd.watchLogs();
+    return jd.waitForCompletion();
+};
+
+module.exports = function bootJasDriver(configs) {
+    let configsArr = Array.isArray(configs) ? configs : [configs],
+        promChain = Promise.resolve();
+    configsArr.forEach(function(config) {
+        promChain = promChain.then(function() {
+            return jasDriver(config);
+        });
+    });
+    return promChain.then(function() {
+        console.log("\n-> All test configurations have completed.\n");
+    });
 };

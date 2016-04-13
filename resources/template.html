@@ -24,7 +24,8 @@
                 console.error = function() {
                     logs.push({
                         type: "error",
-                        args: Array.prototype.slice.call(arguments)
+                        args: Array.prototype.slice.call(arguments),
+                        stack: (new Error).stack
                     });
                     oldError.apply(console, arguments);
                 };
