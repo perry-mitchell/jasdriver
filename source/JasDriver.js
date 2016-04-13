@@ -25,8 +25,7 @@ class JasDriver {
             return window.testCompleted;
         })
         .then((completed) => {
-            if (completed) {
-                clearInterval(this.logWatch);
+            if (completed && !this.complete) {
                 return this.driver.executeScript(function() {
                     return window.getStats();
                 })
@@ -36,12 +35,13 @@ class JasDriver {
             }
         })
         .catch(function(err) {
-            log("error", err);
+            log("error", err.message);
         })
     }
 
     finish(stats) {
         let exitDelay = 0;
+        clearInterval(this.logWatch);
         this.complete = true;
         console.log("\n");
         console.log("Tests finished");
@@ -116,7 +116,7 @@ class JasDriver {
                 return this.checkStatus();
             })
             .catch(function(err) {
-                log("error", err);
+                log("fatal", err);
             })
         }, 500);
     }
