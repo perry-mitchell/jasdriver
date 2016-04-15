@@ -46,13 +46,14 @@ class JasDriver {
         .then(function(logs) {
             logs.forEach(function(logData) {
                 if (logData.type === "error") {
-                    if (logData.args.length === 1 && isError(logData.args[0])) {
-                        let containedError = logData.args[0],
-                            stack = containedError.stack || formatStack(logData.stack);
-                        log(logData.type, [containedError.message, stack]);
-                    } else {
-                        log(logData.type, logData.args);
-                    }
+                    log(logData.type, logData.args);
+                    // if (logData.args.length === 1 && isError(logData.args[0])) {
+                    //     let containedError = logData.args[0],
+                    //         stack = containedError.stack || formatStack(logData.stack);
+                    //     log(logData.type, [containedError.message, stack]);
+                    // } else {
+                    //     log(logData.type, logData.args);
+                    // }
                 } else {
                     log(logData.type, logData.args);
                 }
