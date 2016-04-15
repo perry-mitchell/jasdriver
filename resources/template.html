@@ -3,7 +3,6 @@
         <title>Jasmine test w/ Webdriver</title>
         <script type="text/javascript">
             (function init() {
-                console.log("Init");
                 var logs = [];
                 var oldLog = console.log,
                     oldWarn = console.warn,
@@ -31,15 +30,23 @@
                     oldError.apply(console, arguments);
                 };
 
-                window.onerror = function(msg, url, line, col, error) {
-                    logs.push({
-                        type: "exception",
-                        args: [msg, url + " (" + line + "," + col + ")", error]
-                    })
-                };
+                if (window.addEventListener) {
+                    window.addEventListener("error", function(evt) {
+                        logs.push({
+                            type: "exception",
+                            args: [evt.error]
+                        })
+                    });
+                } else {
+                    window.onerror = function(msg, url, line, col, error) {
+                        logs.push({
+                            type: "exception",
+                            args: [msg, url + " (" + line + "," + col + ")", error]
+                        })
+                    };
+                }
 
                 window.fetchLogs = function() {
-                    console.log("Fetch", logs.length);
                     if (logs.length > 0) {
                         var fetchedLogs = [].concat(logs);
                         logs = [];
