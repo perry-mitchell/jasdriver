@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 
 const JasDriver = require("./JasDriver.js");
+const log = require("./log.js");
 const specResolver = require("./specResolver.js");
 
 const BUILD_DIR = path.resolve(__dirname, "../build");
@@ -32,10 +33,15 @@ function jasDriver(config) {
     // webdriver setup
     let webdriver = config.webdriver;
     if (!webdriver) {
-        let Webdriver = require("selenium-webdriver");
-        webdriver = (new Webdriver.Builder())
-            .withCapabilities({ browserName: config.webdriverBrowser })
-            .build();
+        try {
+            let Webdriver = require("selenium-webdriver");
+            webdriver = (new Webdriver.Builder())
+                .withCapabilities({ browserName: config.webdriverBrowser })
+                .build();
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
     }
     // post-processing
     let specs = config.specs;
@@ -68,6 +74,7 @@ function jasDriver(config) {
         .replace("<!-- JASMINE_SPECS -->", specEls.join("\n") + "\n");
     fs.writeFileSync(runnerPath, runnerContent);
     // create the JasDriver
+    log("info", "Starting tests...");
     let jd = new JasDriver(webdriver, config);
     jd.initialise(`file://${runnerPath}`);
     jd.watchLogs();
@@ -76,6 +83,7 @@ function jasDriver(config) {
 
 module.exports = function bootJasDriver(configs) {
     let configsArr = Array.isArray(configs) ? configs : [configs],
+        numConfigs = configsArr.length,
         promChain = Promise.resolve();
     configsArr.forEach(function(config) {
         promChain = promChain.then(function() {
@@ -83,6 +91,9 @@ module.exports = function bootJasDriver(configs) {
         });
     });
     return promChain.then(function() {
-        console.log("\n-> All test configurations have completed.\n");
+        //console.log("\n-> All test configurations have completed.\n");
+        if (numConfigs > 1) {
+            log("info", `${numConfigs} test configurations have completed`);
+        }
     });
 };

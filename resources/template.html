@@ -3,6 +3,7 @@
         <title>Jasmine test w/ Webdriver</title>
         <script type="text/javascript">
             (function init() {
+                console.log("Init");
                 var logs = [];
                 var oldLog = console.log,
                     oldWarn = console.warn,
@@ -38,6 +39,7 @@
                 };
 
                 window.fetchLogs = function() {
+                    console.log("Fetch", logs.length);
                     if (logs.length > 0) {
                         var fetchedLogs = [].concat(logs);
                         logs = [];

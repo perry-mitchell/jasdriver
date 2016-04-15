@@ -20,6 +20,8 @@ module.exports = function log(type, items) {
         case "fatal":
             output = chalk.yellow.bold("<") + chalk.red.bold("fatal") + chalk.yellow.bold(">");
             break;
+        case "info":
+            /* falls-through */
         default:
             output = chalk.white("<") + chalk.gray.bold("info") + chalk.white(">");
             break;
