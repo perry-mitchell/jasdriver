@@ -65,6 +65,9 @@ class JasDriver {
 
     finish(stats) {
         clearInterval(this.logWatch);
+        if (this.complete) {
+            return;
+        }
         this.complete = true;
         this.fetchLogs()
             .then(() => {
