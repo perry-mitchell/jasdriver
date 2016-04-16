@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "pwd && node ./source/cli.js"
+    "test": "node ./source/cli.js"
   },
   "keywords": [
     "jasmine",
