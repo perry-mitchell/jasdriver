@@ -44,6 +44,20 @@ module.exports = function log(type, items) {
         case "fatal":
             output = chalk.yellow.bold("<") + chalk.red.bold("fatal") + chalk.yellow.bold(">");
             break;
+        case "spec_result":
+            let description = items[0],
+                status = items[1],
+                statusText = "";
+            if (status === "passed") {
+                statusText = chalk.green("✔");
+            } else if (status === "pending") {
+                statusText = chalk.yellow("☉");
+            } else if (status === "failed") {
+                statusText = chalk.red("✘");
+            }
+            output = "\t" + statusText + " " + description;
+            items = "";
+            break;
         case "info":
             /* falls-through */
         default:

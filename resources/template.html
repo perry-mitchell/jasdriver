@@ -77,10 +77,9 @@
         <script type="text/javascript">
             jasmine.getEnv().addReporter({
                 specStarted: function(result) {
-                    console.log("Running:", result.description + "...");
+                    //console.log("Running:", result.description + "...");
                 },
                 specDone: function(result) {
-                    //console.log("Completed:", result.description, "(" + result.status + ")");
                     window.jasDriverLogs.push({
                         type: "spec_result",
                         args: [result.description, result.status]
