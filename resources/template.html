@@ -3,6 +3,7 @@
         <title>Jasmine test w/ Webdriver</title>
         <script type="text/javascript">
             window.jasDriverLogs = [];
+            window.resultIndent = 0;
             (function init() {
                 var oldLog = console.log,
                     oldWarn = console.warn,
@@ -82,7 +83,7 @@
                 specDone: function(result) {
                     window.jasDriverLogs.push({
                         type: "spec_result",
-                        args: [result.description, result.status]
+                        args: [result.description, result.status, window.resultIndent]
                     });
                     switch (result.status) {
                         case "passed":
@@ -96,6 +97,16 @@
                         default:
                             window.testSkipped += 1;
                     }
+                },
+                suiteStarted: function(result) {
+                    window.resultIndent += 1;
+                    window.jasDriverLogs.push({
+                        type: "suite",
+                        args: [result.description]
+                    });
+                },
+                suiteDone: function(result) {
+                    window.resultIndent -= 1;
                 }
             });
             afterAll(function() {

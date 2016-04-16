@@ -47,6 +47,7 @@ module.exports = function log(type, items) {
         case "spec_result":
             let description = items[0],
                 status = items[1],
+                indenting = items[2],
                 statusText = "";
             if (status === "passed") {
                 statusText = chalk.green("✔");
@@ -55,8 +56,16 @@ module.exports = function log(type, items) {
             } else if (status === "failed") {
                 statusText = chalk.red("✘");
             }
+            let padding = "\t";
+            while (indenting > 0) {
+                padding += "\t";
+                indenting -= 1;
+            }
             output = "\t" + statusText + " " + description;
             items = "";
+            break;
+        case "suite":
+            output = "Suite: ";
             break;
         case "info":
             /* falls-through */
