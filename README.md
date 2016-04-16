@@ -1,7 +1,7 @@
 # JasDriver
 Testing framework integration for Jasmine and Webdriver.
 
-[![npm](https://img.shields.io/npm/l/jasdriver.svg?maxAge=2592000)](https://www.npmjs.com/package/jasdriver)
+[![Build Status](https://travis-ci.org/perry-mitchell/jasdriver.svg?branch=master)](https://travis-ci.org/perry-mitchell/jasdriver) [![npm](https://img.shields.io/npm/l/jasdriver.svg?maxAge=2592000)](https://www.npmjs.com/package/jasdriver)
 
 ## About
 Jasmine is an amazing testing framework, just as Webdriver is a fantastic browser automation tool. These two pieces of software haven't worked so amazingly well together, until now.
