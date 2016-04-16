@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "./source/cli.js"
+    "test": "jasdriver"
   },
   "keywords": [
     "jasmine",
