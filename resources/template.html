@@ -2,54 +2,57 @@
     <head>
         <title>Jasmine test w/ Webdriver</title>
         <script type="text/javascript">
+            window.jasDriverLogs = [];
             (function init() {
-                var logs = [];
                 var oldLog = console.log,
                     oldWarn = console.warn,
                     oldError = console.error;
                 console.log = function() {
-                    logs.push({
+                    window.jasDriverLogs.push({
                         type: "log",
                         args: Array.prototype.slice.call(arguments)
                     });
                     oldLog.apply(console, arguments);
                 };
                 console.warn = function() {
-                    logs.push({
+                    window.jasDriverLogs.push({
                         type: "warning",
                         args: Array.prototype.slice.call(arguments)
                     });
                     oldWarn.apply(console, arguments);
                 };
                 console.error = function() {
-                    logs.push({
+                    window.jasDriverLogs.push({
                         type: "error",
-                        args: Array.prototype.slice.call(arguments),
-                        stack: (new Error).stack
+                        args: Array.prototype.slice.call(arguments)
                     });
                     oldError.apply(console, arguments);
                 };
 
                 if (window.addEventListener) {
                     window.addEventListener("error", function(evt) {
-                        logs.push({
-                            type: "exception",
-                            args: [evt.error]
+                        var err = {
+                            name: "Error",
+                            message: evt.message
+                        };
+                        window.jasDriverLogs.push({
+                            type: "error",
+                            args: [evt.error || err]
                         })
                     });
                 } else {
                     window.onerror = function(msg, url, line, col, error) {
-                        logs.push({
-                            type: "exception",
+                        window.jasDriverLogs.push({
+                            type: "error",
                             args: [msg, url + " (" + line + "," + col + ")", error]
                         })
                     };
                 }
 
                 window.fetchLogs = function() {
-                    if (logs.length > 0) {
-                        var fetchedLogs = [].concat(logs);
-                        logs = [];
+                    if (window.jasDriverLogs.length > 0) {
+                        var fetchedLogs = [].concat(window.jasDriverLogs);
+                        window.jasDriverLogs = [];
                         return fetchedLogs;
                     }
                     return [];
@@ -77,7 +80,11 @@
                     console.log("Running:", result.description + "...");
                 },
                 specDone: function(result) {
-                    console.log("Completed:", result.description, "(" + result.status + ")");
+                    //console.log("Completed:", result.description, "(" + result.status + ")");
+                    window.jasDriverLogs.push({
+                        type: "spec_result",
+                        args: [result.description, result.status]
+                    });
                     switch (result.status) {
                         case "passed":
                             window.testPassed += 1;

@@ -9,6 +9,14 @@ function isError(obj) {
 }
 
 let prettyError = new PrettyError();
+prettyError.appendStyle({
+    'pretty-error > header > title > kind': {
+        display: 'none'
+    },
+    'pretty-error > header > colon': {
+        display: 'none'
+    }
+});
 
 module.exports = function log(type, items) {
     items = Array.isArray(items) ? items : [items];
@@ -44,7 +52,6 @@ module.exports = function log(type, items) {
     }
     console.log.apply(console, [output].concat(items));
     errors.forEach(function(error) {
-        //console.log("RENDER!!!", error);
         console.log(prettyError.render(error));
     });
 };
