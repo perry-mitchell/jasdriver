@@ -102,7 +102,7 @@
                     window.resultIndent += 1;
                     window.jasDriverLogs.push({
                         type: "suite",
-                        args: [result.description]
+                        args: [result.description, window.resultIndent]
                     });
                 },
                 suiteDone: function(result) {

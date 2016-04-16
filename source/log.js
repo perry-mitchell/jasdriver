@@ -3,6 +3,15 @@
 const chalk = require("chalk");
 const PrettyError = require("pretty-error");
 
+function getPaddingForIndent(indent) {
+    let text = "";
+    while (indent > 0) {
+        indent -= 1;
+        text += "   ";
+    }
+    return text;
+}
+
 function isError(obj) {
     let name = (obj && obj.name) ? obj.name.toLowerCase() : "";
     return obj && obj.message && (name.indexOf("error") >= 0 || name.indexOf("exception") >= 0);
@@ -56,16 +65,12 @@ module.exports = function log(type, items) {
             } else if (status === "failed") {
                 statusText = chalk.red("✘");
             }
-            let padding = "\t";
-            while (indenting > 0) {
-                padding += "\t";
-                indenting -= 1;
-            }
-            output = "\t" + statusText + " " + description;
+            output = getPaddingForIndent(indenting) + "   " + statusText + " " + description;
             items = "";
             break;
         case "suite":
-            output = "Suite: ";
+            output = getPaddingForIndent(items[1]) + chalk.bold.underline(items[0]);
+            items = "";
             break;
         case "info":
             /* falls-through */
