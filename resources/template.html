@@ -2,45 +2,58 @@
     <head>
         <title>Jasmine test w/ Webdriver</title>
         <script type="text/javascript">
+            window.jasDriverLogs = [];
+            window.resultIndent = 0;
             (function init() {
-                var logs = [];
                 var oldLog = console.log,
                     oldWarn = console.warn,
                     oldError = console.error;
                 console.log = function() {
-                    logs.push({
+                    window.jasDriverLogs.push({
                         type: "log",
                         args: Array.prototype.slice.call(arguments)
                     });
                     oldLog.apply(console, arguments);
                 };
                 console.warn = function() {
-                    logs.push({
+                    window.jasDriverLogs.push({
                         type: "warning",
                         args: Array.prototype.slice.call(arguments)
                     });
                     oldWarn.apply(console, arguments);
                 };
                 console.error = function() {
-                    logs.push({
+                    window.jasDriverLogs.push({
                         type: "error",
-                        args: Array.prototype.slice.call(arguments),
-                        stack: (new Error).stack
+                        args: Array.prototype.slice.call(arguments)
                     });
                     oldError.apply(console, arguments);
                 };
 
-                window.onerror = function(msg, url, line, col, error) {
-                    logs.push({
-                        type: "exception",
-                        args: [msg, url + " (" + line + "," + col + ")", error]
-                    })
-                };
+                if (window.addEventListener) {
+                    window.addEventListener("error", function(evt) {
+                        var err = {
+                            name: "Error",
+                            message: evt.message
+                        };
+                        window.jasDriverLogs.push({
+                            type: "error",
+                            args: [evt.error || err]
+                        })
+                    });
+                } else {
+                    window.onerror = function(msg, url, line, col, error) {
+                        window.jasDriverLogs.push({
+                            type: "error",
+                            args: [msg, url + " (" + line + "," + col + ")", error]
+                        })
+                    };
+                }
 
                 window.fetchLogs = function() {
-                    if (logs.length > 0) {
-                        var fetchedLogs = [].concat(logs);
-                        logs = [];
+                    if (window.jasDriverLogs.length > 0) {
+                        var fetchedLogs = [].concat(window.jasDriverLogs);
+                        window.jasDriverLogs = [];
                         return fetchedLogs;
                     }
                     return [];
@@ -65,10 +78,13 @@
         <script type="text/javascript">
             jasmine.getEnv().addReporter({
                 specStarted: function(result) {
-                    console.log("Running:", result.description + "...");
+                    //console.log("Running:", result.description + "...");
                 },
                 specDone: function(result) {
-                    console.log("Completed:", result.description, "(" + result.status + ")");
+                    window.jasDriverLogs.push({
+                        type: "spec_result",
+                        args: [result.description, result.status, window.resultIndent]
+                    });
                     switch (result.status) {
                         case "passed":
                             window.testPassed += 1;
@@ -81,6 +97,16 @@
                         default:
                             window.testSkipped += 1;
                     }
+                },
+                suiteStarted: function(result) {
+                    window.resultIndent += 1;
+                    window.jasDriverLogs.push({
+                        type: "suite",
+                        args: [result.description, window.resultIndent]
+                    });
+                },
+                suiteDone: function(result) {
+                    window.resultIndent -= 1;
                 }
             });
             afterAll(function() {

@@ -1,6 +1,6 @@
 {
   "name": "jasdriver",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Jasmine testing framework for Webdriver",
   "main": "source/index.js",
   "directories": {
@@ -22,6 +22,7 @@
     "url": "git+https://github.com/perry-mitchell/jasdriver.git"
   },
   "bin": {
+    "chromedriver": "./node_modules/.bin/chromedriver",
     "jasdriver": "./source/cli.js"
   },
   "author": "",
@@ -34,6 +35,7 @@
     "chalk": "^1.1.3",
     "chromedriver": "^2.21.2",
     "jasmine-core": "^2.4.1",
+    "pretty-error": "^2.0.0",
     "selenium-webdriver": "^2.53.1",
     "table": "^3.7.8"
   }
