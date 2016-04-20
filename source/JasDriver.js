@@ -13,9 +13,10 @@ function isError(obj) {
 
 class JasDriver {
 
-    constructor(webdriverInstance, config) {
+    constructor(webdriverInstance, config, options) {
         this.driver = webdriverInstance;
         this.config = config;
+        this.options = options;
         this.complete = false;
         this._completionCallbacks = [];
     }
@@ -72,7 +73,8 @@ class JasDriver {
         this.complete = true;
         this.fetchLogs()
             .then(() => {
-                let exitDelay = 0;
+                let exitDelay = 0,
+                    canExit = ((!this.options.singleConfig && this.options.isLast) || this.options.singleConfig);
                 log("info", "Testing completed");
                 console.log(table(
                     [
@@ -96,7 +98,7 @@ class JasDriver {
                     this.driver.quit();
                     exitDelay = 500;
                 }
-                if (this.config.exitOnFinish) {
+                if (this.config.exitOnFinish && canExit) {
                     if (stats.failed > 0) {
                         setTimeout(function() {
                             process.exit(1);

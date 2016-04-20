@@ -19,7 +19,7 @@ function filePathToElement(path, elType) {
     throw new Error("Unrecognised element type: "+ elType);
 }
 
-function jasDriver(config) {
+function jasDriver(config, options) {
     config = Object.assign({
         closeDriverOnFinish: true,
         exitOnFinish: true,
@@ -30,6 +30,9 @@ function jasDriver(config) {
         webdriver: null,
         webdriverBrowser: "chrome"
     }, config);
+    options = Object.assign({
+        singleConfig: true
+    }, options || {});
     // webdriver setup
     let webdriver = config.webdriver;
     if (!webdriver) {
@@ -75,7 +78,7 @@ function jasDriver(config) {
     fs.writeFileSync(runnerPath, runnerContent);
     // create the JasDriver
     log("info", "Starting tests...");
-    let jd = new JasDriver(webdriver, config);
+    let jd = new JasDriver(webdriver, config, options);
     jd.initialise(`file://${runnerPath}`);
     jd.watchLogs();
     return jd.waitForCompletion();
@@ -84,16 +87,28 @@ function jasDriver(config) {
 module.exports = function bootJasDriver(configs) {
     let configsArr = Array.isArray(configs) ? configs : [configs],
         numConfigs = configsArr.length,
-        promChain = Promise.resolve();
-    configsArr.forEach(function(config) {
+        promChain = Promise.resolve(),
+        singleConfig = configsArr.length === 1;
+    configsArr.forEach(function(config, index) {
+        let isLast = (index === configsArr.length - 1);
         promChain = promChain.then(function() {
-            return jasDriver(config);
+            return jasDriver(
+                    config,
+                    {
+                        isLast,
+                        singleConfig
+                    }
+                );
         });
     });
     return promChain.then(function() {
-        //console.log("\n-> All test configurations have completed.\n");
-        if (numConfigs > 1) {
-            log("info", `${numConfigs} test configurations have completed`);
-        }
-    });
+            //console.log("\n-> All test configurations have completed.\n");
+            if (numConfigs > 1) {
+                log("info", `${numConfigs} test configurations have completed`);
+            }
+        })
+        .catch(function(error) {
+            log("error", error);
+            process.exit(2);
+        });
 };
