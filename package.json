@@ -1,6 +1,6 @@
 {
   "name": "jasdriver",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Jasmine testing framework for Webdriver",
   "main": "source/index.js",
   "directories": {
