@@ -94,20 +94,31 @@ class JasDriver {
                         }
                     }
                 ));
+
+                // Close webdriver on finish
                 if (this.config.closeDriverOnFinish) {
                     this.driver.quit();
                     exitDelay = 500;
                 }
-                if (this.config.exitOnFinish && canExit) {
-                    if (stats.failed > 0) {
-                        setTimeout(function() {
-                            process.exit(1);
-                        }, exitDelay);
-                    }
+
+                // Check if any tests failed
+                if (stats.failed > 0) {
+                    // exit
+                    setTimeout(function() {
+                        process.exit(1);
+                    }, exitDelay);
                 } else {
-                    this._completionCallbacks.forEach(function(cb) {
-                        (cb)();
-                    });
+                    // Check if we can exit now that we're finished
+                    if (this.config.exitOnFinish && canExit) {
+                        setTimeout(function() {
+                            process.exit(0);
+                        }, exitDelay);
+                    } else {
+                        // Run other callbacks
+                        this._completionCallbacks.forEach(function(cb) {
+                            (cb)();
+                        });
+                    }
                 }
             })
             .catch(function(err) {

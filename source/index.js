@@ -77,7 +77,8 @@ function jasDriver(config, options) {
         .replace("<!-- JASMINE_SPECS -->", specEls.join("\n") + "\n");
     fs.writeFileSync(runnerPath, runnerContent);
     // create the JasDriver
-    log("info", "Starting tests...");
+    let browserName = config.webdriver ? "(provided)" : config.webdriverBrowser;
+    log("info", `Starting tests with browser: ${browserName}`);
     let jd = new JasDriver(webdriver, config, options);
     jd.initialise(`file://${runnerPath}`);
     jd.watchLogs();
