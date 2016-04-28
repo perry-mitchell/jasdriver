@@ -2,12 +2,15 @@
 
 const chalk = require("chalk");
 const PrettyError = require("pretty-error");
+const truwrap = require("truwrap");
+
+const INDENTATION = "   ";
 
 function getPaddingForIndent(indent) {
     let text = "";
     while (indent > 0) {
         indent -= 1;
-        text += "   ";
+        text += INDENTATION;
     }
     return text;
 }
@@ -65,8 +68,21 @@ module.exports = function log(type, items) {
             } else if (status === "failed") {
                 statusText = chalk.red("✘");
             }
-            output = getPaddingForIndent(indenting) + "   " + statusText + " " + description;
+            output = getPaddingForIndent(indenting) + INDENTATION + statusText + " " + description;
             items = "";
+            break;
+        case "spec_failure":
+            let failureMsg = items[0],
+                msgIndent = items[1] + 2,
+                writer = truwrap({
+                    left: (INDENTATION.length * msgIndent),
+                    right: 1,
+                    mode: 'soft'//,
+                    //outStream: process.stdout
+                });
+            writer.write(chalk.dim(failureMsg) + "\n");
+            writer.end();
+            output = false;
             break;
         case "suite":
             output = getPaddingForIndent(items[1]) + chalk.bold.underline(items[0]);
@@ -78,7 +94,9 @@ module.exports = function log(type, items) {
             output = chalk.white("<") + chalk.gray.bold("info") + chalk.white(">");
             break;
     }
-    console.log.apply(console, [output].concat(items));
+    if (output) {
+        console.log.apply(console, [output].concat(items));
+    }
     errors.forEach(function(error) {
         console.log(prettyError.render(error));
     });

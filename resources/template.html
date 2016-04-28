@@ -91,6 +91,12 @@
                             break;
                         case "failed":
                             window.testFailed += 1;
+                            result.failedExpectations.forEach(function(failed) {
+                                window.jasDriverLogs.push({
+                                    type: "spec_failure",
+                                    args: [failed.message, window.resultIndent]
+                                });
+                            });
                             break;
                         case "pending":
                             /* falls-through */
