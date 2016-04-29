@@ -6,6 +6,13 @@ const truwrap = require("truwrap");
 
 const INDENTATION = "   ";
 
+function convertError(obj) {
+    let err = new Error(obj.message);
+    err.name = obj.name;
+    err.stack = obj.stack;
+    return err;
+}
+
 function getPaddingForIndent(indent) {
     let text = "";
     while (indent > 0) {
@@ -16,19 +23,30 @@ function getPaddingForIndent(indent) {
 }
 
 function isError(obj) {
-    let name = (obj && obj.name) ? obj.name.toLowerCase() : "";
-    return obj && obj.message && (name.indexOf("error") >= 0 || name.indexOf("exception") >= 0);
+    return (obj && obj.type === "jasdriver_error");
+}
+
+function trimTermColour(text, start, end) {
+    start = (start === undefined || start === true);
+    end = (end === undefined || end === true);
+    if (start) {
+        text = text.replace(/^(\x1B[[(?);]{0,2}(;?\d)*.|\s)+/, "");
+    }
+    if (end) {
+        text = text.replace(/(\x1B[[(?);]{0,2}(;?\d)*.|\s)+$/, "");
+    }
+    return text;
 }
 
 let prettyError = new PrettyError();
-prettyError.appendStyle({
-    'pretty-error > header > title > kind': {
-        display: 'none'
-    },
-    'pretty-error > header > colon': {
-        display: 'none'
-    }
-});
+// prettyError.appendStyle({
+//     'pretty-error > header > title > kind': {
+//         display: 'none'
+//     },
+//     'pretty-error > header > colon': {
+//         display: 'none'
+//     }
+// });
 
 module.exports = function log(type, items) {
     items = Array.isArray(items) ? items : [items];
@@ -36,7 +54,7 @@ module.exports = function log(type, items) {
         errors = [];
     items = items.filter(function(item) {
         if (isError(item)) {
-            errors.push(item);
+            errors.push(convertError(item));
             return false;
         }
         return true;
@@ -51,7 +69,12 @@ module.exports = function log(type, items) {
             output = chalk.white.bold("<") + chalk.yellow.bold("warn") + chalk.white.bold(">");
             break;
         case "error":
-            output = chalk.white.bold("<") + chalk.red.bold("error") + chalk.white.bold(">");
+            output = (items.length > 0) ?
+                chalk.white.bold("<") + chalk.red.bold("error") + chalk.white.bold(">") :
+                false;
+            break;
+        case "exception":
+            output = chalk.white.bold("Ex");
             break;
         case "fatal":
             output = chalk.yellow.bold("<") + chalk.red.bold("fatal") + chalk.yellow.bold(">");
@@ -98,6 +121,11 @@ module.exports = function log(type, items) {
         console.log.apply(console, [output].concat(items));
     }
     errors.forEach(function(error) {
-        console.log(prettyError.render(error));
+        let errorText = "" + prettyError.render(error);
+        console.log(
+            "\n" +
+            trimTermColour(errorText, false, true) +
+            "\n"
+        );
     });
 };

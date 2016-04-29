@@ -2,6 +2,7 @@
 
 const path = require("path");
 const fs = require("fs");
+const Webdriver = require("selenium-webdriver");
 
 const JasDriver = require("./JasDriver.js");
 const log = require("./log.js");
@@ -37,9 +38,17 @@ function jasDriver(config, options) {
     let webdriver = config.webdriver;
     if (!webdriver) {
         try {
-            let Webdriver = require("selenium-webdriver");
+            let webdriverCapabilities = { browserName: config.webdriverBrowser };
+
+            if (config.webdriverBrowser === "chrome") {
+                webdriverCapabilities = Webdriver.Capabilities.chrome();
+                webdriverCapabilities.set('chromeOptions', {
+                    'args': ["--allow-file-access-from-files"]
+                });
+            }
+
             webdriver = (new Webdriver.Builder())
-                .withCapabilities({ browserName: config.webdriverBrowser })
+                .withCapabilities(webdriverCapabilities)
                 .build();
         } catch (err) {
             console.error(err);
