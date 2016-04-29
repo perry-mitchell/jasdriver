@@ -16,4 +16,4 @@ script:
   - npm test
 language: node_js
 node_js:
-  - "4.3"
+  - "5.0"
