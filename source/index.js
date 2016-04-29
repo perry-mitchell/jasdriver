@@ -2,6 +2,7 @@
 
 const path = require("path");
 const fs = require("fs");
+const Webdriver = require("selenium-webdriver");
 
 const JasDriver = require("./JasDriver.js");
 const log = require("./log.js");
@@ -37,9 +38,17 @@ function jasDriver(config, options) {
     let webdriver = config.webdriver;
     if (!webdriver) {
         try {
-            let Webdriver = require("selenium-webdriver");
+            let webdriverCapabilities = { browserName: config.webdriverBrowser };
+
+            if (config.webdriverBrowser === "chrome") {
+                webdriverCapabilities = Webdriver.Capabilities.chrome();
+                webdriverCapabilities.set('chromeOptions', {
+                    'args': ["--allow-file-access-from-files"]
+                });
+            }
+
             webdriver = (new Webdriver.Builder())
-                .withCapabilities({ browserName: config.webdriverBrowser })
+                .withCapabilities(webdriverCapabilities)
                 .build();
         } catch (err) {
             console.error(err);
@@ -77,7 +86,8 @@ function jasDriver(config, options) {
         .replace("<!-- JASMINE_SPECS -->", specEls.join("\n") + "\n");
     fs.writeFileSync(runnerPath, runnerContent);
     // create the JasDriver
-    log("info", "Starting tests...");
+    let browserName = config.webdriver ? "(provided)" : config.webdriverBrowser;
+    log("info", `Starting tests with browser: ${browserName}`);
     let jd = new JasDriver(webdriver, config, options);
     jd.initialise(`file://${runnerPath}`);
     jd.watchLogs();

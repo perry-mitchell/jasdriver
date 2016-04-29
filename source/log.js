@@ -2,30 +2,51 @@
 
 const chalk = require("chalk");
 const PrettyError = require("pretty-error");
+const truwrap = require("truwrap");
+
+const INDENTATION = "   ";
+
+function convertError(obj) {
+    let err = new Error(obj.message);
+    err.name = obj.name;
+    err.stack = obj.stack;
+    return err;
+}
 
 function getPaddingForIndent(indent) {
     let text = "";
     while (indent > 0) {
         indent -= 1;
-        text += "   ";
+        text += INDENTATION;
     }
     return text;
 }
 
 function isError(obj) {
-    let name = (obj && obj.name) ? obj.name.toLowerCase() : "";
-    return obj && obj.message && (name.indexOf("error") >= 0 || name.indexOf("exception") >= 0);
+    return (obj && obj.type === "jasdriver_error");
+}
+
+function trimTermColour(text, start, end) {
+    start = (start === undefined || start === true);
+    end = (end === undefined || end === true);
+    if (start) {
+        text = text.replace(/^(\x1B[[(?);]{0,2}(;?\d)*.|\s)+/, "");
+    }
+    if (end) {
+        text = text.replace(/(\x1B[[(?);]{0,2}(;?\d)*.|\s)+$/, "");
+    }
+    return text;
 }
 
 let prettyError = new PrettyError();
-prettyError.appendStyle({
-    'pretty-error > header > title > kind': {
-        display: 'none'
-    },
-    'pretty-error > header > colon': {
-        display: 'none'
-    }
-});
+// prettyError.appendStyle({
+//     'pretty-error > header > title > kind': {
+//         display: 'none'
+//     },
+//     'pretty-error > header > colon': {
+//         display: 'none'
+//     }
+// });
 
 module.exports = function log(type, items) {
     items = Array.isArray(items) ? items : [items];
@@ -33,7 +54,7 @@ module.exports = function log(type, items) {
         errors = [];
     items = items.filter(function(item) {
         if (isError(item)) {
-            errors.push(item);
+            errors.push(convertError(item));
             return false;
         }
         return true;
@@ -48,7 +69,12 @@ module.exports = function log(type, items) {
             output = chalk.white.bold("<") + chalk.yellow.bold("warn") + chalk.white.bold(">");
             break;
         case "error":
-            output = chalk.white.bold("<") + chalk.red.bold("error") + chalk.white.bold(">");
+            output = (items.length > 0) ?
+                chalk.white.bold("<") + chalk.red.bold("error") + chalk.white.bold(">") :
+                false;
+            break;
+        case "exception":
+            output = chalk.white.bold("Ex");
             break;
         case "fatal":
             output = chalk.yellow.bold("<") + chalk.red.bold("fatal") + chalk.yellow.bold(">");
@@ -65,8 +91,21 @@ module.exports = function log(type, items) {
             } else if (status === "failed") {
                 statusText = chalk.red("✘");
             }
-            output = getPaddingForIndent(indenting) + "   " + statusText + " " + description;
+            output = getPaddingForIndent(indenting) + INDENTATION + statusText + " " + description;
             items = "";
+            break;
+        case "spec_failure":
+            let failureMsg = items[0],
+                msgIndent = items[1] + 2,
+                writer = truwrap({
+                    left: (INDENTATION.length * msgIndent),
+                    right: 1,
+                    mode: 'soft'//,
+                    //outStream: process.stdout
+                });
+            writer.write(chalk.dim(failureMsg) + "\n");
+            writer.end();
+            output = false;
             break;
         case "suite":
             output = getPaddingForIndent(items[1]) + chalk.bold.underline(items[0]);
@@ -78,8 +117,15 @@ module.exports = function log(type, items) {
             output = chalk.white("<") + chalk.gray.bold("info") + chalk.white(">");
             break;
     }
-    console.log.apply(console, [output].concat(items));
+    if (output) {
+        console.log.apply(console, [output].concat(items));
+    }
     errors.forEach(function(error) {
-        console.log(prettyError.render(error));
+        let errorText = "" + prettyError.render(error);
+        console.log(
+            "\n" +
+            trimTermColour(errorText, false, true) +
+            "\n"
+        );
     });
 };

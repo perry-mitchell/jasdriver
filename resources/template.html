@@ -8,37 +8,75 @@
                 var oldLog = console.log,
                     oldWarn = console.warn,
                     oldError = console.error;
+
+                function convertError(err) {
+                    return createError(err.name || "Error", err.message, err.stack);
+                }
+
+                function createError(name, message, stack) {
+                    return {
+                        type: "jasdriver_error",
+                        name: name,
+                        message: message,
+                        stack: stack  || (new Error()).stack
+                    };
+                }
+
+                function mapErrors(arr) {
+                    return arr.map(function(item) {
+                        return (item instanceof Error) ?
+                            createError(
+                                item.name || "Error",
+                                item.message,
+                                item.stack
+                            ) : item;
+                    });
+                }
+
+                // function protectedFunction(f) {
+                //     return function() {
+                //         try {
+                //             f.apply(this, arguments);
+                //         } catch(e) {
+                //             window.jasDriverLogs.push({
+                //                 type: "exception",
+                //                 args: [e]
+                //             });
+                //             throw e;
+                //         }
+                //     };
+                // }
+                // setTimeout = protectedFunction(setTimeout);
+                // setInterval = protectedFunction(setInterval);
+
                 console.log = function() {
                     window.jasDriverLogs.push({
                         type: "log",
-                        args: Array.prototype.slice.call(arguments)
+                        args: mapErrors(Array.prototype.slice.call(arguments))
                     });
                     oldLog.apply(console, arguments);
                 };
                 console.warn = function() {
                     window.jasDriverLogs.push({
                         type: "warning",
-                        args: Array.prototype.slice.call(arguments)
+                        args: mapErrors(Array.prototype.slice.call(arguments))
                     });
                     oldWarn.apply(console, arguments);
                 };
                 console.error = function() {
                     window.jasDriverLogs.push({
                         type: "error",
-                        args: Array.prototype.slice.call(arguments)
+                        args: mapErrors(Array.prototype.slice.call(arguments))
                     });
                     oldError.apply(console, arguments);
                 };
 
                 if (window.addEventListener) {
                     window.addEventListener("error", function(evt) {
-                        var err = {
-                            name: "Error",
-                            message: evt.message
-                        };
+                        var err = createError("Error", evt.message, evt.stack);
                         window.jasDriverLogs.push({
                             type: "error",
-                            args: [evt.error || err]
+                            args: [evt.error ? convertError(evt.error) : err]
                         })
                     });
                 } else {
@@ -91,6 +129,12 @@
                             break;
                         case "failed":
                             window.testFailed += 1;
+                            result.failedExpectations.forEach(function(failed) {
+                                window.jasDriverLogs.push({
+                                    type: "spec_failure",
+                                    args: [failed.message, window.resultIndent]
+                                });
+                            });
                             break;
                         case "pending":
                             /* falls-through */
