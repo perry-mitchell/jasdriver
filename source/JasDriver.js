@@ -1,5 +1,6 @@
 "use strict";
 
+const junitBuilder = require("junit-report-builder");
 const log = require("./log.js");
 const table = require("table").default;
 
@@ -9,6 +10,30 @@ function formatStack(stackText) {
 
 function isError(obj) {
     return obj && obj.message && obj.name.toLowerCase().indexOf("error") >= 0;
+}
+
+function writeJunit(suites, filename) {
+    function prepareSuite(suiteData, parentSuite) {
+        // @todo: re-enable when using a better junit writer that supports nesting:
+        //let suite = parentSuite ? parentSuite.testSuite() : junitBuilder.testSuite();
+        let suite = junitBuilder.testSuite();
+        suite.name(suiteData.description);
+        suiteData.specs.forEach(function(specData) {
+            let testCase = suite.testCase().name(specData.description);
+            if (specData.result === "passed") {
+                // do nothing
+            } else if (specData.result === "pending") {
+                testCase.skipped();
+            } else {
+                testCase.failure();
+            }
+        });
+        suiteData.suites.forEach(function(suiteDataChild) {
+            prepareSuite(suiteDataChild, suite);
+        });
+    }
+    suites.forEach(prepareSuite);
+    junitBuilder.writeTo(filename);
 }
 
 class JasDriver {
@@ -48,17 +73,19 @@ class JasDriver {
             logs.forEach(function(logData) {
                 if (logData.type === "error") {
                     log(logData.type, logData.args);
-                    // if (logData.args.length === 1 && isError(logData.args[0])) {
-                    //     let containedError = logData.args[0],
-                    //         stack = containedError.stack || formatStack(logData.stack);
-                    //     log(logData.type, [containedError.message, stack]);
-                    // } else {
-                    //     log(logData.type, logData.args);
-                    // }
                 } else {
                     log(logData.type, logData.args);
                 }
             })
+        })
+        .catch(function(err) {
+            log("fatal", err);
+        });
+    }
+
+    fetchReport() {
+        return this.driver.executeScript(function() {
+            return window.getReport ? window.getReport() : [];
         })
         .catch(function(err) {
             log("fatal", err);
@@ -72,7 +99,8 @@ class JasDriver {
         }
         this.complete = true;
         this.fetchLogs()
-            .then(() => {
+            .then(() => this.fetchReport())
+            .then((suites) => {
                 let exitDelay = 0,
                     canExit = ((!this.options.singleConfig && this.options.isLast) || this.options.singleConfig);
                 log("info", "Testing completed");
@@ -94,6 +122,11 @@ class JasDriver {
                         }
                     }
                 ));
+
+                if (this.config.junitOutput) {
+                    writeJunit(suites, this.config.junitOutput);
+                    log("info", "JUnit output written to: " + this.config.junitOutput);
+                }
 
                 // Close webdriver on finish
                 if (this.config.closeDriverOnFinish) {
