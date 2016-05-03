@@ -15,6 +15,7 @@ JasDriver needs a simple configuration file, called `jasdriver.config.js`:
 module.exports = {
     closeDriverOnFinish: true,
     exitOnFinish: true,
+    junitOutput: "./junit-report.xml",
     runnerDir: ".",
     runnerFilename: "_SpecRunner.html",
     specs: [],
@@ -35,6 +36,9 @@ Close the webdriver instance upon finishing the tests. Runs `webdriver.quit()` u
 
 ### exitOnFinish
 Allow JasDriver to run `process.exit()` when finished (used for returning non-zero exit codes for failures).
+
+### junitOutput
+Output results to a JUnit XML file - the path for the output file.
 
 ### runnerDir
 The directory to place the spec-runner in.
