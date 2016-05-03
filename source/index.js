@@ -24,6 +24,7 @@ function jasDriver(config, options) {
     config = Object.assign({
         closeDriverOnFinish: true,
         exitOnFinish: true,
+        junitOutput: false,
         runnerDir: BUILD_DIR,
         runnerFilename: "_SpecRunner.html",
         specs: [],

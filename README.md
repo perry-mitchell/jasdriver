@@ -1,7 +1,7 @@
 # JasDriver
 Testing framework integration for Jasmine and Webdriver.
 
-[![Node compatibility](https://img.shields.io/badge/node-%3E%3D%205.0.0-green.svg?style=flat)](https://github.com/nodejs/node/blob/v5.0.0/CHANGELOG.md) [![Build Status](https://travis-ci.org/perry-mitchell/jasdriver.svg?branch=master)](https://travis-ci.org/perry-mitchell/jasdriver) [![license](https://img.shields.io/npm/l/jasdriver.svg?maxAge=2592000)](https://www.npmjs.com/package/jasdriver)
+[![Node compatibility](https://img.shields.io/badge/node-%3E%3D%204.4.3-green.svg?style=flat)](https://github.com/nodejs/node/blob/v5.0.0/CHANGELOG.md) [![Build Status](https://travis-ci.org/perry-mitchell/jasdriver.svg?branch=master)](https://travis-ci.org/perry-mitchell/jasdriver) [![license](https://img.shields.io/npm/l/jasdriver.svg?maxAge=2592000)](https://www.npmjs.com/package/jasdriver)
 
 ## About
 Jasmine is an amazing testing framework, just as Webdriver is a fantastic browser automation tool. These two pieces of software haven't worked so amazingly well together, until now.
@@ -15,6 +15,7 @@ JasDriver needs a simple configuration file, called `jasdriver.config.js`:
 module.exports = {
     closeDriverOnFinish: true,
     exitOnFinish: true,
+    junitOutput: "./junit-report.xml",
     runnerDir: ".",
     runnerFilename: "_SpecRunner.html",
     specs: [],
@@ -35,6 +36,9 @@ Close the webdriver instance upon finishing the tests. Runs `webdriver.quit()` u
 
 ### exitOnFinish
 Allow JasDriver to run `process.exit()` when finished (used for returning non-zero exit codes for failures).
+
+### junitOutput
+Output results to a JUnit XML file - the path for the output file.
 
 ### runnerDir
 The directory to place the spec-runner in.

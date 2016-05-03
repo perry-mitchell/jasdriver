@@ -1,8 +1,8 @@
 "use strict";
 
 const chalk = require("chalk");
+const padStdio = require("pad-stdio");
 const PrettyError = require("pretty-error");
-const truwrap = require("truwrap");
 
 const INDENTATION = "   ";
 
@@ -96,15 +96,12 @@ module.exports = function log(type, items) {
             break;
         case "spec_failure":
             let failureMsg = items[0],
-                msgIndent = items[1] + 2,
-                writer = truwrap({
-                    left: (INDENTATION.length * msgIndent),
-                    right: 1,
-                    mode: 'soft'//,
-                    //outStream: process.stdout
-                });
-            writer.write(chalk.dim(failureMsg) + "\n");
-            writer.end();
+                msgIndent = items[1] + 2;
+
+            padStdio.stdout(getPaddingForIndent(msgIndent));
+            console.log(chalk.dim(failureMsg));
+            padStdio.stdout();
+
             output = false;
             break;
         case "suite":

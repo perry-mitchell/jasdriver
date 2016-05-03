@@ -2,8 +2,12 @@
     <head>
         <title>Jasmine test w/ Webdriver</title>
         <script type="text/javascript">
-            window.jasDriverLogs = [];
-            window.resultIndent = 0;
+            var JasDriver = window.JasDriver = {
+                logs: [],
+                resultIndent: 0,
+                suites: [],
+                suiteStack: []
+            };
             (function init() {
                 var oldLog = console.log,
                     oldWarn = console.warn,
@@ -50,21 +54,21 @@
                 // setInterval = protectedFunction(setInterval);
 
                 console.log = function() {
-                    window.jasDriverLogs.push({
+                    JasDriver.logs.push({
                         type: "log",
                         args: mapErrors(Array.prototype.slice.call(arguments))
                     });
                     oldLog.apply(console, arguments);
                 };
                 console.warn = function() {
-                    window.jasDriverLogs.push({
+                    JasDriver.logs.push({
                         type: "warning",
                         args: mapErrors(Array.prototype.slice.call(arguments))
                     });
                     oldWarn.apply(console, arguments);
                 };
                 console.error = function() {
-                    window.jasDriverLogs.push({
+                    JasDriver.logs.push({
                         type: "error",
                         args: mapErrors(Array.prototype.slice.call(arguments))
                     });
@@ -74,14 +78,14 @@
                 if (window.addEventListener) {
                     window.addEventListener("error", function(evt) {
                         var err = createError("Error", evt.message, evt.stack);
-                        window.jasDriverLogs.push({
+                        JasDriver.logs.push({
                             type: "error",
                             args: [evt.error ? convertError(evt.error) : err]
                         })
                     });
                 } else {
                     window.onerror = function(msg, url, line, col, error) {
-                        window.jasDriverLogs.push({
+                        JasDriver.logs.push({
                             type: "error",
                             args: [msg, url + " (" + line + "," + col + ")", error]
                         })
@@ -89,9 +93,9 @@
                 }
 
                 window.fetchLogs = function() {
-                    if (window.jasDriverLogs.length > 0) {
-                        var fetchedLogs = [].concat(window.jasDriverLogs);
-                        window.jasDriverLogs = [];
+                    if (JasDriver.logs.length > 0) {
+                        var fetchedLogs = [].concat(JasDriver.logs);
+                        JasDriver.logs = [];
                         return fetchedLogs;
                     }
                     return [];
@@ -107,6 +111,9 @@
                         skipped: window.testSkipped
                     };
                 };
+                window.getReport = function() {
+                    return JasDriver.suites;
+                };
             })();
         </script>
         <!-- JASMINE_SETUP -->
@@ -119,9 +126,9 @@
                     //console.log("Running:", result.description + "...");
                 },
                 specDone: function(result) {
-                    window.jasDriverLogs.push({
+                    JasDriver.logs.push({
                         type: "spec_result",
-                        args: [result.description, result.status, window.resultIndent]
+                        args: [result.description, result.status, JasDriver.resultIndent]
                     });
                     switch (result.status) {
                         case "passed":
@@ -130,9 +137,9 @@
                         case "failed":
                             window.testFailed += 1;
                             result.failedExpectations.forEach(function(failed) {
-                                window.jasDriverLogs.push({
+                                JasDriver.logs.push({
                                     type: "spec_failure",
-                                    args: [failed.message, window.resultIndent]
+                                    args: [failed.message, JasDriver.resultIndent]
                                 });
                             });
                             break;
@@ -141,16 +148,36 @@
                         default:
                             window.testSkipped += 1;
                     }
+                    // Junit
+                    var spec = {
+                            description: result.description,
+                            result: result.status
+                        },
+                        suiteStackSize = JasDriver.suiteStack.length;
+                    JasDriver.suiteStack[suiteStackSize - 1].specs.push(spec);
                 },
                 suiteStarted: function(result) {
-                    window.resultIndent += 1;
-                    window.jasDriverLogs.push({
+                    JasDriver.resultIndent += 1;
+                    JasDriver.logs.push({
                         type: "suite",
-                        args: [result.description, window.resultIndent]
+                        args: [result.description, JasDriver.resultIndent]
                     });
+                    var suite = {
+                            description: result.description,
+                            specs: [],
+                            suites: []
+                        },
+                        suiteStackSize = JasDriver.suiteStack.length;
+                    if (suiteStackSize > 0) {
+                        JasDriver.suiteStack[suiteStackSize - 1].suites.push(suite);
+                    } else {
+                        JasDriver.suites.push(suite);
+                    }
+                    JasDriver.suiteStack.push(suite);
                 },
                 suiteDone: function(result) {
-                    window.resultIndent -= 1;
+                    JasDriver.resultIndent -= 1;
+                    JasDriver.suiteStack.pop();
                 }
             });
             afterAll(function() {
