@@ -161,6 +161,7 @@ class JasDriver {
 
     initialise(url) {
         this.driver.get(url);
+        return this.waitForReady();
     }
 
     waitForCompletion() {
@@ -168,6 +169,27 @@ class JasDriver {
             Promise.resolve() :
             new Promise((resolve) => {
                 this._completionCallbacks.push(resolve);
+            });
+    }
+
+    waitForReady() {
+        let checkForReady = () => {
+            return this.driver
+                .executeScript(function() {
+                    return window.jasmine && true;
+                })
+                .then(function(ready) {
+                    return ready ?
+                        new Promise((resolve) => { setTimeout(() => resolve(true), 500); }) :
+                        false;
+                });
+        };
+        return checkForReady()
+            .then((ready) => {
+                if (!ready) {
+                    return (new Promise((resolve) => { setTimeout(resolve, 250); }))
+                        .then(() => this.waitForReady());
+                }
             });
     }
 

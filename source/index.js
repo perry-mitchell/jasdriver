@@ -90,9 +90,12 @@ function jasDriver(config, options) {
     let browserName = config.webdriver ? "(provided)" : config.webdriverBrowser;
     log("info", `Starting tests with browser: ${browserName}`);
     let jd = new JasDriver(webdriver, config, options);
-    jd.initialise(`file://${runnerPath}`);
-    jd.watchLogs();
-    return jd.waitForCompletion();
+    return jd
+        .initialise(`file://${runnerPath}`)
+        .then(function() {
+            jd.watchLogs();
+            return jd.waitForCompletion();
+        });
 };
 
 module.exports = function bootJasDriver(configs) {
