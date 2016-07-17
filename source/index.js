@@ -20,6 +20,14 @@ function filePathToElement(path, elType) {
     throw new Error("Unrecognised element type: "+ elType);
 }
 
+function resolveJasmineRootPath() {
+    let mainPath = require.resolve("jasmine-core"),
+        split = mainPath.split(path.sep),
+        coreIndex = split.indexOf("jasmine-core");
+    let corePath = split.slice(0, coreIndex + 1);
+    return corePath.join(path.sep);
+}
+
 function jasDriver(config, options) {
     config = Object.assign({
         closeDriverOnFinish: true,
@@ -68,16 +76,16 @@ function jasDriver(config, options) {
     // runner construction
     let runnerContent = fs.readFileSync(RUNNER_TEMPLATE_PATH).toString("utf8"),
         runnerPath = path.resolve(config.runnerDir, config.runnerFilename),
+        jasmineCoreRoot = resolveJasmineRootPath(),
         headerEls = [
                 "lib/jasmine-core/jasmine.js",
                 "lib/jasmine-core/jasmine-html.js",
                 "lib/jasmine-core/boot.js"
             ]
-            .map((filename) => `file://${path.resolve(__dirname + "/../node_modules/jasmine-core", filename)}`)
+            .map((filename) => `file://${path.resolve(jasmineCoreRoot, filename)}`)
             .map((url) => filePathToElement(url, "script"))
             .concat([
-                filePathToElement(`file://${path.resolve(__dirname +
-                    "/../node_modules/jasmine-core/lib/jasmine-core", "jasmine.css")}`, "link")
+                filePathToElement(`file://${path.resolve(jasmineCoreRoot, "jasmine.css")}`, "link")
             ]),
         specEls = config.specs
             .map((filename) => `file://${filename}`)
