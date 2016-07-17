@@ -77,6 +77,7 @@ function jasDriver(config, options) {
     let runnerContent = fs.readFileSync(RUNNER_TEMPLATE_PATH).toString("utf8"),
         runnerPath = path.resolve(config.runnerDir, config.runnerFilename),
         jasmineCoreRoot = resolveJasmineRootPath(),
+        jasmineCoreLib = path.join(jasmineCoreRoot, "lib/jasmine-core"),
         headerEls = [
                 "lib/jasmine-core/jasmine.js",
                 "lib/jasmine-core/jasmine-html.js",
@@ -85,7 +86,7 @@ function jasDriver(config, options) {
             .map((filename) => `file://${path.resolve(jasmineCoreRoot, filename)}`)
             .map((url) => filePathToElement(url, "script"))
             .concat([
-                filePathToElement(`file://${path.resolve(jasmineCoreRoot, "jasmine.css")}`, "link")
+                filePathToElement(`file://${path.resolve(jasmineCoreLib, "jasmine.css")}`, "link")
             ]),
         specEls = config.specs
             .map((filename) => `file://${filename}`)
